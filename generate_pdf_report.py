@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime
 from fpdf import FPDF
+from graphics.graphics import generate_service_pie_chart
 
 REPORTS_DIR = "tests"
 OUTPUT_FOLDER = "reports"
@@ -28,7 +29,7 @@ class PDFReport(FPDF):
         image_path = "./assets/logo.jpg"
         self.set_font("Arial", "B", 12)
         self.set_xy(10, 10)
-        self.cell(0, 10, "Reporte de Pruebas de Integración - SOFEA", ln=False, align="L")
+        self.cell(0, 10, "Reporte de Pruebas de Integración - AgroConecta", ln=False, align="L")
         if os.path.exists(image_path):
             self.image(image_path, x=170, y=6, h=15)
         self.ln(15)
@@ -98,16 +99,23 @@ def generate_pdf(reports):
     pdf.add_page()
 
     total, passed, failed, skipped = 0, 0, 0, 0
-    for data in reports.values():
-        for test in data.get("tests", []):
+    service_stats = {}
+
+    for service, data in reports.items():
+        sp = sf = ss = 0
+        for test in data["tests"]:
             total += 1
-            outcome = test.get("outcome")
+            outcome = test["outcome"]
             if outcome == "passed":
                 passed += 1
+                sp += 1
             elif outcome == "failed":
                 failed += 1
+                sf += 1
             elif outcome == "skipped":
                 skipped += 1
+                ss += 1
+        service_stats[service] = {"passed": sp, "failed": sf, "skipped": ss}
 
     resumen = (
         f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -117,19 +125,32 @@ def generate_pdf(reports):
         f"Skips: {skipped}\n"
         f"Servicios cubiertos: {', '.join(reports.keys())}"
     )
-
     pdf.chapter_title("Resumen general")
     pdf.chapter_body(resumen)
 
+    # Añadir tabla por servicio + gráfico individual
+    temp_chart_paths = []
+
     for service, data in reports.items():
         pdf.chapter_title(f"Servicio: {service}")
-        pdf.add_test_table(data.get("tests", []))
+        pdf.add_test_table(data["tests"])
+
+        stats = service_stats[service]
+        pie_path = generate_service_pie_chart(
+            service,
+            stats["passed"],
+            stats["failed"],
+            stats["skipped"]
+        )
+        if pie_path:
+            pdf.image(pie_path, w=80)
+            temp_chart_paths.append(pie_path)
 
     output_path = get_next_report_filename()
     pdf.output(output_path)
     print(f"PDF generado en: {output_path}")
 
-
-if __name__ == "__main__":
-    report_data = collect_json_reports(REPORTS_DIR)
-    generate_pdf(report_data)
+    # Limpiar archivos temporales
+    for temp_path in temp_chart_paths:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
