@@ -1,6 +1,10 @@
 import os
 import subprocess
 from generate_pdf_report import collect_json_reports, generate_pdf
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 TESTS_DIR = "."
 SERVICES_DIRS = [
