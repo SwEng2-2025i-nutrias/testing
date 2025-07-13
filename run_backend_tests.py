@@ -14,7 +14,7 @@ SERVICES_DIRS = [
 
 def run_all_backend_tests():
     for service in SERVICES_DIRS:
-        path = os.path.join(TESTS_DIR, service, "Integración")
+        path = os.path.join(TESTS_DIR, service, "integration")
         print(f"🔍 Ejecutando tests para: {service}")
         if os.path.isdir(path):
             print(path)
