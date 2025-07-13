@@ -1,6 +1,10 @@
 import os
 import subprocess
 from generate_pdf_report import collect_json_reports, generate_pdf
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 TESTS_DIR = "."
 SERVICES_DIRS = [
@@ -10,7 +14,7 @@ SERVICES_DIRS = [
 
 def run_all_backend_tests():
     for service in SERVICES_DIRS:
-        path = os.path.join(TESTS_DIR, service, "Integración")
+        path = os.path.join(TESTS_DIR, service, "integration")
         print(f"🔍 Ejecutando tests para: {service}")
         if os.path.isdir(path):
             print(path)
