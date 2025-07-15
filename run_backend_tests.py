@@ -10,6 +10,7 @@ TESTS_DIR = "."
 SERVICES_DIRS = [
     "AuthenticationService",
     "ProductService",
+    "ProductSearchService",
 ]
 
 def run_all_backend_tests():
