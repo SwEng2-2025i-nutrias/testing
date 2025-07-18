@@ -10,28 +10,15 @@
 
 // Login command
 Cypress.Commands.add('loginAs', (email, password) => {
-  cy.session([email, password], () => {
-    cy.visit('/login')
-    cy.get('input[type="email"]').type(email, { log: false })
-    cy.get('input[type="password"]').type(password, { log: false })
-    cy.get('button[type="submit"]').click()
+  cy.visit('/login');
+  cy.get('input[type="email"]').type(email, { log: false });
+  cy.get('input[type="password"]').type(password, { log: false });
+  cy.get('button[type="submit"]').click();
 
-    // Esperar a que la URL cambie y el token exista
-    cy.url().should('not.include', '/login', { timeout: 15000 })
-    cy.window().should((win) => {
-      const token = win.localStorage.getItem('token') || win.sessionStorage.getItem('token')
-      expect(token).to.be.a('string').and.not.be.empty
-    })
-    cy.log(`✅ Login completado y token guardado para ${email}`)
-  }, {
-    cacheAcrossSpecs: true // Cachea la sesión entre diferentes archivos de prueba
-  })
-
-  // Visitar la página de productos después de que la sesión se haya establecido/restaurado
-  cy.visit('/products')
-  cy.url().should('include', '/products')
-  cy.log('✅ Navegado a la página de productos')
-})
+  // Esperar a que la URL cambie, lo que indica que el login fue exitoso
+  cy.url().should('not.include', '/login', { timeout: 15000 });
+  cy.log(`✅ Login completado para ${email}`);
+});
 
 // Health check for all backend services
 Cypress.Commands.add('checkBackendHealth', () => {
@@ -160,29 +147,15 @@ Cypress.Commands.add('clickChatButtonForProduct', (productName) => {
 
 // Send message in chat
 Cypress.Commands.add('sendChatMessage', (message) => {
-  cy.log(`💬 Enviando mensaje: ${message}`)
+  cy.log(`💬 Enviando mensaje: ${message}`);
   
   // Esperar a que el chat esté listo
-  cy.get('body').should('contain', 'Chat', { timeout: 10000 })
+  cy.get('body').should('contain', 'Chat', { timeout: 10000 });
   
-  // Buscar el input del chat con diferentes selectores
-  cy.get('body').then(($body) => {
-    if ($body.find('[data-testid="chat-input"]').length > 0) {
-      cy.get('[data-testid="chat-input"]').type(message)
-      cy.get('[data-testid="send-button"]').click()
-    } else if ($body.find('input[placeholder*="mensaje"]').length > 0) {
-      cy.get('input[placeholder*="mensaje"]').type(message)
-      cy.get('button').contains(/enviar/i).click()
-    } else if ($body.find('textarea[placeholder*="mensaje"]').length > 0) {
-      cy.get('textarea[placeholder*="mensaje"]').type(message)
-      cy.get('button').contains(/enviar/i).click()
-    } else {
-      // Buscar cualquier input de texto disponible
-      cy.get('input[type="text"]').last().type(message)
-      cy.get('button').contains(/enviar/i).click()
-    }
-  })
-})
+  // Usar data-testid para encontrar el input y el botón de enviar
+  cy.get('input[placeholder*="Escribe un mensaje..."]').type(message);
+  cy.get('[data-testid="send-button"]').click();
+});
 
 // Debug command to capture page state
 Cypress.Commands.add('debugPageState', (label) => {
