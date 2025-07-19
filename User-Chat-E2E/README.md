@@ -38,13 +38,6 @@ npx cypress run --spec "cypress/e2e/buyer-chat.cy.js" --browser chrome
 npx cypress run --spec "cypress/e2e/farmer-chat.cy.js" --browser edge
 ```
 
-### Opción 2: Ejecución Automática Paralela
-
-#### Windows:
-```cmd
-run-parallel-tests.bat
-```
-
 
 ### Opción 3: Ejecución en Modo Interactivo
 ```bash
@@ -56,51 +49,12 @@ npx cypress open
 npx cypress open --e2e
 ```
 
-**Pasos para usar el modo interactivo:**
-1. Ejecutar `npx cypress open`
-2. Seleccionar "E2E Testing" 
-3. Elegir el navegador (Chrome recomendado)
-4. Seleccionar el archivo `buyer-chat.cy.js` de la lista
-5. Ver la prueba ejecutarse en tiempo real
-
-## Comandos Personalizados
-
-Los siguientes comandos están disponibles en `cypress/support/commands.js`:
-
-- `cy.loginAs(email, password)` - Realizar login con verificación
-- `cy.sendChatMessage(message)` - Enviar mensaje en chat
-- `cy.waitForMessage(text, timeout)` - Esperar a que aparezca un mensaje
-- `cy.findProductByName(name)` - Buscar producto por nombre
-- `cy.clickChatButtonForProduct(name)` - Hacer clic en botón de chat de un producto específico
-- `cy.waitForProductsToLoad()` - Esperar a que los productos se carguen completamente
-- `cy.waitForPageToLoad()` - Esperar a que la página esté completamente cargada
-- `cy.verifyMessageSent(message)` - Verificar que un mensaje se envió correctamente
-- `cy.debugPageState(label)` - Capturar screenshot y logs para debugging
-
-## Configuración
-
-La configuración principal está en `cypress.config.js`:
-- **baseUrl**: `http://localhost:5173`
-- **Timeouts**: 20 segundos por defecto (aumentado para mejor estabilidad)
-- **Viewport**: 1280x720
-- **Videos**: Deshabilitados
-- **Screenshots**: Solo en fallos
-- **Page Load Timeout**: 30 segundos
-
 ## Logs
 
 Los logs de ejecución se guardan en:
 - `logs/buyer-test.log` - Log de la prueba del comprador
 - `logs/farmer-test.log` - Log de la prueba del agricultor
 
-## Troubleshooting
-
-### Problemas Comunes
-
-1. **Elemento no encontrado**: Verifica que los selectores coincidan con los elementos de la UI
-2. **Timeout en mensajes**: Asegúrate de que el WebSocket/polling esté funcionando
-3. **Login fallido**: Verifica que los usuarios existan en la base de datos
-4. **Producto no encontrado**: Confirma que el producto "Prueba 0" existe
 
 ### Debugging
 
@@ -113,9 +67,44 @@ npx cypress run --spec "cypress/e2e/buyer-chat.cy.js" --headed --no-exit
 npx cypress open
 ```
 
+## 📊 Generación de Reportes PDF
+
+
+### Generar reporte completo
+```bash
+# Ejecutar pruebas y generar PDF automáticamente
+npm run test:complete
+```
+
+### Comandos individuales
+```bash
+# Solo ejecutar pruebas
+npm run test:e2e
+
+# Generar reporte HTML
+npm run test:e2e:report  
+
+# Convertir HTML a PDF
+npm run generate:pdf
+```
+
+### 📋 Características del reporte PDF
+- ✅ Logo de la Universidad Nacional de Colombia
+- ✅ Header con información del semestre 2025-1
+- ✅ Fecha de generación automática
+- ✅ Resumen ejecutivo con estadísticas
+- ✅ Detalles de cada prueba con tiempos
+- ✅ Capturas de pantalla en errores
+- ✅ Gráficos de éxito/fallo
+- ✅ Numeración de páginas
+
+**Archivo generado**: `cypress/reports/reporte-integracion-e2e-[fecha].pdf`
+
+
+
 ## Notas Importantes
 
 - Las pruebas están diseñadas para ejecutarse en paralelo
-- El agricultor debe ejecutarse después del comprador (5-10 segundos de retraso)
+- El agricultor debe ejecutarse después del comprador (1-2 segundos de retraso)
 - Los navegadores diferentes (Chrome/Firefox) ayudan a simular usuarios reales
 - Las pruebas limpian cookies y localStorage antes de ejecutarse

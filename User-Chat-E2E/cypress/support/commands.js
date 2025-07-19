@@ -20,39 +20,11 @@ Cypress.Commands.add('loginAs', (email, password) => {
   cy.log(`✅ Login completado para ${email}`);
 });
 
-// Health check for all backend services
+// Health check only for ProductSearchService (the working one)
 Cypress.Commands.add('checkBackendHealth', () => {
-  cy.log('🏥 Verificando salud de todos los servicios backend...')
+  cy.log('🏥 Verificando ProductSearchService...')
   
-  // AuthenticationService en puerto 5001
-  cy.request({
-    method: 'GET',
-    url: 'http://127.0.0.1:5001/health',
-    failOnStatusCode: false,
-    timeout: 10000
-  }).then((response) => {
-    if (response.status === 200) {
-      cy.log('✅ AuthenticationService (5001) está activo')
-    } else {
-      cy.log(`⚠️ AuthenticationService (5001) respondió con status: ${response.status}`)
-    }
-  })
-
-  // ProductService en puerto 5000
-  cy.request({
-    method: 'GET',
-    url: 'http://127.0.0.1:5000/health',
-    failOnStatusCode: false,
-    timeout: 10000
-  }).then((response) => {
-    if (response.status === 200) {
-      cy.log('✅ ProductService (5000) está activo')
-    } else {
-      cy.log(`⚠️ ProductService (5000) respondió con status: ${response.status}`)
-    }
-  })
-
-  // ProductSearchService en puerto 5002 - EL PROBLEMÁTICO
+  // Solo ProductSearchService en puerto 5002 - EL QUE FUNCIONA
   cy.request({
     method: 'GET',
     url: 'http://127.0.0.1:5002/health',
@@ -188,13 +160,54 @@ Cypress.Commands.add('debugPageState', (label) => {
 
 // Verify message was sent
 Cypress.Commands.add('verifyMessageSent', (message) => {
-  cy.log(`✅ Verificando mensaje enviado: ${message}`)
+  cy.log(`✅ Verificando mensaje enviado: ${message}`);
+  cy.get('[data-testid="chat-message"]').should('contain', message);
+});
+
+// Wait for new message to appear after sending one
+Cypress.Commands.add('waitForNewMessage', (expectedMessage, timeout = 30000) => {
+  cy.log(`⏳ Esperando nuevo mensaje: ${expectedMessage}`);
+  cy.get('[data-testid="chat-message"]', { timeout })
+    .should('have.length.greaterThan', 1)
+    .last()
+    .should('contain', expectedMessage);
+  cy.log(`✅ Nuevo mensaje recibido: ${expectedMessage}`);
+});
+
+// Wait for message count to increase and verify content
+Cypress.Commands.add('waitForMessageCountIncrease', (expectedMessage, timeout = 30000) => {
+  cy.log(`⏳ Monitoreando incremento de mensajes para: ${expectedMessage}`);
   
-  // Esperar a que el mensaje aparezca en el chat
-  cy.get('body').should('contain', message, { timeout: 15000 })
-  
-  // Verificar que el mensaje está visible
-  cy.get('.message, .chat-message, [data-testid="chat-message"]')
-    .contains(message)
-    .should('be.visible')
-})
+  // Primero obtener el conteo inicial de mensajes
+  let initialCount = 0;
+  cy.get('body').then(() => {
+    cy.get('[data-testid="chat-message"]').then(($messages) => {
+      initialCount = $messages.length;
+      cy.log(`📊 Conteo inicial de mensajes: ${initialCount}`);
+      
+      // Función recursiva para verificar el incremento
+      const checkForNewMessage = (remainingTime) => {
+        if (remainingTime <= 0) {
+          throw new Error(`Timeout: No se detectó incremento de mensajes después de ${timeout}ms`);
+        }
+        
+        cy.get('[data-testid="chat-message"]').then(($currentMessages) => {
+          const currentCount = $currentMessages.length;
+          
+          if (currentCount > initialCount) {
+            // Verificar que el último mensaje contiene el texto esperado
+            cy.get('[data-testid="chat-message"]').last().should('contain', expectedMessage);
+            cy.log(`✅ Nuevo mensaje detectado: ${expectedMessage} (conteo: ${initialCount} → ${currentCount})`);
+          } else {
+            // Continuar monitoreando
+            cy.wait(1000);
+            checkForNewMessage(remainingTime - 1000);
+          }
+        });
+      };
+      
+      // Iniciar el monitoreo
+      checkForNewMessage(timeout);
+    });
+  });
+});
