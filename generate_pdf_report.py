@@ -75,9 +75,10 @@ class PDFReport(FPDF):
                 reason = test.get("call", {}).get("crash", {}).get("message", "")
                 reason = reason.replace("\n", " ").strip()
 
-            # Calcular cuántas líneas necesita la razón para ajustar la altura
+            # Calcular cuántas líneas necesita el nombre del test y la razón
+            test_name_lines = self.multi_cell(col_widths[0], line_height, test_name, border=0, split_only=True)
             reason_lines = self.multi_cell(col_widths[3], line_height, reason, border=0, split_only=True)
-            max_lines = max(1, len(reason_lines))
+            max_lines = max(len(test_name_lines), len(reason_lines), 1)
             row_height = line_height * max_lines
 
             # Guardar posición inicial
@@ -85,7 +86,7 @@ class PDFReport(FPDF):
             y = self.get_y()
 
             # Test name
-            self.multi_cell(col_widths[0], row_height, test_name[:58], border=1)
+            self.multi_cell(col_widths[0], line_height, test_name, border=1)
             self.set_xy(x + col_widths[0], y)
 
             # Resultado
@@ -103,6 +104,7 @@ class PDFReport(FPDF):
             self.set_text_color(0, 0, 0)
 
         self.ln()
+
 
 
 
