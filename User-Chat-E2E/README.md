@@ -62,6 +62,7 @@ Para depurar las pruebas:
 ```bash
 # Ejecutar con modo debug
 npx cypress run --spec "cypress/e2e/buyer-chat.cy.js" --headed --no-exit
+npx cypress run --spec "cypress/e2e/farmer-chat.cy.js" --headed --no-exit
 
 # Ejecutar en modo interactivo
 npx cypress open
