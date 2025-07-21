@@ -52,7 +52,7 @@ class PDFReport(FPDF):
 
     def add_test_table(self, tests):
         self.set_font("Arial", "B", 10)
-        col_widths = [60, 30, 30, 70]  # Anchos: Test, Resultado, Duración, Razón
+        col_widths = [60, 30, 30, 70]
         headers = ["Test", "Resultado", "Duración", "Razón"]
         line_height = 8
 
@@ -61,48 +61,72 @@ class PDFReport(FPDF):
             self.cell(col_widths[i], line_height, header, border=1)
         self.ln()
 
-        # Filas
         self.set_font("Arial", "", 9)
+
         for test in tests:
             full_nodeid = test.get("nodeid", "")
             test_name = full_nodeid.split("::")[-1]
             outcome = test.get("outcome", "unknown")
             duration = test.get("call", {}).get("duration", 0.0)
 
-            # Extraer mensaje de error si falló
             reason = ""
             if outcome == "failed":
                 reason = test.get("call", {}).get("crash", {}).get("message", "")
                 reason = reason.replace("\n", " ").strip()
 
-            # Calcular cuántas líneas necesita la razón para ajustar la altura
+            # Calcular número de líneas necesarias para test name y razón
+            test_lines = self.multi_cell(col_widths[0], line_height, test_name, border=0, split_only=True)
             reason_lines = self.multi_cell(col_widths[3], line_height, reason, border=0, split_only=True)
-            max_lines = max(1, len(reason_lines))
+            max_lines = max(len(test_lines), len(reason_lines), 1)
             row_height = line_height * max_lines
 
-            # Guardar posición inicial
+            # Salto de página si no cabe
+            if self.get_y() + row_height > self.page_break_trigger:
+                self.add_page()
+                self.set_font("Arial", "B", 10)
+                for i, header in enumerate(headers):
+                    self.cell(col_widths[i], line_height, header, border=1)
+                self.ln()
+                self.set_font("Arial", "", 9)
+
             x = self.get_x()
             y = self.get_y()
 
             # Test name
-            self.multi_cell(col_widths[0], row_height, test_name[:58], border=1)
-            self.set_xy(x + col_widths[0], y)
+            self.set_xy(x, y)
+            for i, line in enumerate(test_lines):
+                self.set_xy(x, y + i * line_height)
+                self.cell(col_widths[0], line_height, line)
+            self.rect(x, y, col_widths[0], row_height)
 
             # Resultado
-            self.cell(col_widths[1], row_height, outcome, border=1)
-            self.set_xy(x + col_widths[0] + col_widths[1], y)
+            result_x = x + col_widths[0]
+            self.set_xy(result_x, y)
+            self.cell(col_widths[1], row_height, outcome, border=1, align='C')
 
             # Duración
-            self.cell(col_widths[2], row_height, f"{duration:.3f}s", border=1)
-            self.set_xy(x + col_widths[0] + col_widths[1] + col_widths[2], y)
+            duration_x = result_x + col_widths[1]
+            self.set_xy(duration_x, y)
+            self.cell(col_widths[2], row_height, f"{duration:.3f}s", border=1, align='C')
 
             # Razón del fallo
+            reason_x = duration_x + col_widths[2]
             if outcome == "failed":
                 self.set_text_color(200, 0, 0)
-            self.multi_cell(col_widths[3], line_height, reason, border=1)
+            for i, line in enumerate(reason_lines):
+                self.set_xy(reason_x, y + i * line_height)
+                self.cell(col_widths[3], line_height, line)
             self.set_text_color(0, 0, 0)
+            self.rect(reason_x, y, col_widths[3], row_height)
+
+            # Ir a la siguiente fila
+            self.set_y(y + row_height)
 
         self.ln()
+
+
+
+
 
 
 
