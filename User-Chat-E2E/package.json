@@ -6,8 +6,10 @@
     "test": "cypress run",
     "test:open": "cypress open",
     "test:parallel": "node scripts/run-parallel-tests.js",
+    "test:all": "node scripts/run-parallel-tests.js --all",
     "test:report": "node scripts/generate-pdf.js",
-    "test:complete": "npm run test:parallel && npm run test:report",
+    "test:complete": "npm run test:all && npm run test:report",
+    "test:chat": "npm run test:parallel && npm run test:report",
     "clean:reports": "rd /s /q cypress\\reports 2>nul || exit 0"
   },
   "devDependencies": {

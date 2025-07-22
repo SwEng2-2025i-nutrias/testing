@@ -70,7 +70,7 @@ This will:
 
 ### E2E Tests (Frontend)
 
-#### Prerequisites
+#### Prerequisites to the Chat service Tests E2E
 
 1. **Frontend running**: Ensure the frontend is active at `http://localhost:5173`.
 2. **Backend running**: Backend services must be active.
@@ -79,14 +79,43 @@ This will:
    - Farmer: `farmer1@gmail.com` / `12345678`
 4. **Test product**: A product named "**Test 0**" must exist.
 
+#### Additional Prerequisites for Product Search Tests
+
+To ensure the proper execution of the product search tests, the following data must exist in the database:
+
+1. At least one product with the name "Tomate" or "Tomates".
+2. At least one product categorized as a "fruit".
+3. At least one product with a price greater than or equal to 5000.
+4. At least one product with a quantity greater than or equal to 70.
+
 #### Running E2E Tests
 
-##### Option 1: Manual Execution (Recommended for development)
-
-To debug the tests:
+##### Option 1: Run All Tests (Recommended)
 
 ```bash
-# Run in debug mode (runs one after the other)
+# Run complete test suite: auth → product search → buyer chat → farmer chat
+npm run test:complete
+```
+
+This will:
+1. Run authentication tests
+2. Run product search tests  
+3. Run buyer and farmer chat tests in parallel
+4. Generate a single comprehensive PDF report
+
+##### Option 2: Run Only Chat Tests
+
+```bash
+# Run only buyer and farmer chat tests
+npm run test:chat
+```
+
+##### Option 3: Manual Execution (for debugging)
+
+```bash
+# Run individual test files for debugging
+npx cypress run --spec "cypress/e2e/auth_test.cy.js" --headed --no-exit
+npx cypress run --spec "cypress/e2e/product_search_test.cy.js" --headed --no-exit
 npx cypress run --spec "cypress/e2e/buyer-chat.cy.js" --headed --no-exit
 npx cypress run --spec "cypress/e2e/farmer-chat.cy.js" --headed --no-exit
 
@@ -156,12 +185,17 @@ npm run test:complete
 ├── User-Chat-E2E/
 │    ├── cypress/
 │    │   ├── e2e/
+│    │   │   ├── auth_test.cy.js
+│    │   │   ├── product_search_test.cy.js
 │    │   │   ├── buyer-chat.cy.js
 │    │   │   └── farmer-chat.cy.js
 │    │   └── reports/
 │    │       └── e2e-integration-report-[date].pdf
-│    ├── reports/
-│    └── integration_report_1.pdf
+│    ├── scripts/
+│    │   ├── run-parallel-tests.js
+│    │   └── generate-pdf.js
+│    ├── package.json
+│    └── ...
 ├── run_backend_tests.py
 ├── generate_pdf_report.py
 ├── requirements.txt
@@ -178,6 +212,7 @@ When adding a new service:
 1. Create a properly structured folder.
 2. Add the folder name to `SERVICES_DIRS`.
 3. Add its base URL to the `.env` file.
+
 
 
 ---

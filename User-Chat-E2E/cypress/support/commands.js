@@ -211,3 +211,24 @@ Cypress.Commands.add('waitForMessageCountIncrease', (expectedMessage, timeout = 
     });
   });
 });
+
+
+
+
+// ------------------------------------------- COAMMANDS -------------------------------------------
+// PRODUCT SEARCH SERVICE
+
+// Comando para verificar que existen productos
+Cypress.Commands.add('shouldHaveProducts', () => {
+  cy.get('[data-testid="product-card"]').should('have.length.greaterThan', 0);
+});
+
+// Comando para validar que todos los product-card cumplen una condición sobre un selector
+Cypress.Commands.add('allProductCardsShould', (selector, predicate, ...args) => {
+  cy.get('[data-testid="product-card"]').should('have.length.greaterThan', 0)
+    .should($cards => {
+      expect(
+        $cards.toArray().every(card => predicate(card.querySelector(selector), ...args))
+      ).to.be.true;
+    });
+});
