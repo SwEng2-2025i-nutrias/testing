@@ -215,7 +215,200 @@ Cypress.Commands.add('waitForMessageCountIncrease', (expectedMessage, timeout = 
 
 
 
-// ------------------------------------------- COAMMANDS -------------------------------------------
+// ------------------------------------------- COMMANDS -------------------------------------------
+// CHAT AND MESSAGING COMMANDS
+
+// Comando optimizado para seleccionar la conversación más reciente en AgroConecta
+Cypress.Commands.add('selectMostRecentConversation', (timeout = 1000) => {
+  cy.log('🔍 Buscando conversaciones en la sidebar...');
+  
+  // Esperar a que la página esté completamente cargada
+  cy.get('body', { timeout }).should('not.be.empty');
+  
+  // Esperar a que desaparezcan los indicadores de carga
+  cy.get('body').should('not.contain', 'Cargando conversaciones...', { timeout: 5000 });
+  
+  // Estrategia 1: Buscar por la estructura específica del ConversationItem
+  cy.get('body').then(($body) => {
+    // Verificar si hay alguna conversación disponible
+    const hasNoConversations = $body.text().includes('No hay conversaciones aún') || 
+                              $body.text().includes('No se encontraron conversaciones');
+    
+    if (hasNoConversations) {
+      cy.log('⚠️ No hay conversaciones disponibles para seleccionar');
+      cy.fail('No hay conversaciones disponibles en la sidebar');
+      return;
+    }
+    
+    // Buscar elementos de conversación por estructura específica
+    const conversationSelectors = [
+      // Por clase CSS específica del ConversationItem (con cursor pointer)
+      '.cursor-pointer:has(.w-8.h-8.bg-gray-200)', // Elemento con imagen de producto
+      '.hover\\:bg-gray-100.cursor-pointer', // Clase hover específica
+      
+      // Por contenido de avatar y estructura
+      'div:has(> .relative > .avatar)', // Div que contiene avatar
+      'div:has(.w-3.h-3.bg-green-500)', // Div con indicador online
+      
+      // Por estructura de producto (imagen + nombre + precio)
+      'div:has(.w-8.h-8.bg-gray-200.rounded.overflow-hidden)', // Contenedor con imagen de producto
+      
+      // Por badge de mensajes no leídos
+      'div:has(.badge)', // Contenedor con badge
+      
+      // Por estructura completa del item
+      '.flex.items-center.gap-3.p-4.hover\\:bg-gray-100.cursor-pointer'
+    ];
+    
+    let conversationFound = false;
+    
+    for (let selector of conversationSelectors) {
+      const elements = $body.find(selector);
+      if (elements.length > 0) {
+        cy.log(`✅ Encontradas ${elements.length} conversaciones con selector: ${selector}`);
+        
+        // Seleccionar la primera conversación (más reciente)
+        cy.get(selector, { timeout: 2000 })
+          .first()
+          .should('be.visible')
+          .click({ force: true });
+        
+        conversationFound = true;
+        cy.log('✅ Primera conversación seleccionada');
+        break;
+      }
+    }
+    
+    // Estrategia 2: Si no funciona con selectores, buscar por contenido
+    if (!conversationFound) {
+      cy.log('🔍 Intentando selección por contenido específico...');
+      
+      // Buscar elementos que contengan estructura de conversación
+      cy.get('div').then(($divs) => {
+        const conversationDivs = $divs.filter((index, div) => {
+          const $div = Cypress.$(div);
+          const text = $div.text();
+          
+          // Verificar si tiene características de ConversationItem
+          const hasAvatar = $div.find('.avatar, [class*="avatar"]').length > 0;
+          const hasProductImage = $div.find('.w-8.h-8, [class*="w-8"][class*="h-8"]').length > 0;
+          const hasUserName = /[A-Za-z]+\s[A-Za-z]+/.test(text); // Patrón de nombre
+          const hasPrice = /\$[\d,]+/.test(text); // Patrón de precio
+          const isCursorPointer = $div.css('cursor') === 'pointer' || $div.hasClass('cursor-pointer');
+          
+          return (hasAvatar || hasProductImage) && hasUserName && isCursorPointer;
+        });
+        
+        if (conversationDivs.length > 0) {
+          cy.log(`✅ Encontradas ${conversationDivs.length} conversaciones por contenido`);
+          cy.wrap(conversationDivs.first()).click({ force: true });
+          conversationFound = true;
+        }
+      });
+    }
+    
+    // Estrategia 3: Último recurso - buscar cualquier elemento clickeable en la sidebar
+    if (!conversationFound) {
+      cy.log('🎯 Último recurso: buscar elementos clickeables en sidebar...');
+      
+      // Buscar en la sidebar específicamente
+      cy.get('.w-full.md\\:w-80, .border-r, .bg-gray-50').then(($sidebar) => {
+        if ($sidebar.length > 0) {
+          // Buscar elementos clickeables dentro de la sidebar
+          const clickableElements = $sidebar.find('div').filter((index, el) => {
+            const $el = Cypress.$(el);
+            const hasClickableClasses = $el.hasClass('cursor-pointer') || 
+                                      $el.hasClass('hover:bg-gray-100') ||
+                                      $el.css('cursor') === 'pointer';
+            const hasContent = $el.text().trim().length > 10;
+            const isNotSearch = !$el.find('input[placeholder*="Buscar"]').length;
+            
+            return hasClickableClasses && hasContent && isNotSearch;
+          });
+          
+          if (clickableElements.length > 0) {
+            cy.log(`✅ Encontrados ${clickableElements.length} elementos clickeables en sidebar`);
+            cy.wrap(clickableElements.first()).click({ force: true });
+            conversationFound = true;
+          }
+        }
+      });
+    }
+    
+    if (!conversationFound) {
+      cy.log('❌ No se pudo encontrar ninguna conversación para seleccionar');
+      cy.fail('No se encontraron conversaciones clickeables en la interface');
+    }
+  });
+  
+  // Verificar que la conversación se seleccionó correctamente
+  cy.wait(2000);
+  
+  // Verificar cambios en la UI que indican selección exitosa
+  cy.get('body').should('satisfy', ($body) => {
+    const text = $body.text();
+    return text.includes('Escribe un mensaje') || 
+           text.includes('chat') || 
+           text.includes('conversación') ||
+           $body.find('input[placeholder*="Escribe un mensaje"]').length > 0 ||
+           $body.find('.bg-blue-50.border-r-2.border-blue-500').length > 0; // Item seleccionado
+  }, { timeout: 5000 });
+  
+  cy.log('✅ Conversación seleccionada exitosamente');
+});
+
+// Comando de debug específico para el sistema de mensajería
+Cypress.Commands.add('debugConversationState', (context = 'unknown') => {
+  cy.log(`🔍 DEBUG CONVERSACIONES (${context})`);
+  
+  // URL actual
+  cy.url().then(url => {
+    cy.log(`📍 URL: ${url}`);
+  });
+  
+  // Verificar estado de carga
+  cy.get('body').then($body => {
+    if ($body.text().includes('Cargando conversaciones')) {
+      cy.log('⏳ Estado: Cargando conversaciones...');
+    } else if ($body.text().includes('No hay conversaciones aún')) {
+      cy.log('📭 Estado: Sin conversaciones');
+    } else if ($body.text().includes('No se encontraron conversaciones')) {
+      cy.log('🔍 Estado: Filtro activo sin resultados');
+    } else {
+      cy.log('✅ Estado: Conversaciones disponibles');
+    }
+  });
+  
+  // Contar elementos de conversación
+  cy.get('body').then($body => {
+    // Buscar elementos con estructura de ConversationItem
+    const avatars = $body.find('.avatar, [class*="avatar"]').length;
+    const cursorPointers = $body.find('.cursor-pointer').length;
+    const productImages = $body.find('.w-8.h-8.bg-gray-200').length;
+    
+    cy.log(`👤 Avatares encontrados: ${avatars}`);
+    cy.log(`👆 Elementos clickeables: ${cursorPointers}`);
+    cy.log(`📦 Imágenes de producto: ${productImages}`);
+  });
+  
+  // Usuario y token
+  cy.window().then(win => {
+    const token = win.localStorage.getItem('token') || win.sessionStorage.getItem('token');
+    const userStr = win.localStorage.getItem('user') || win.sessionStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    cy.log(`🔑 Token: ${token ? 'PRESENTE' : 'AUSENTE'}`);
+    cy.log(`👤 Usuario: ${user?.name || user?.nombre || 'N/A'} (${user?.email || 'N/A'})`);
+    cy.log(`🏷️ Rol: ${user?.role || 'N/A'}`);
+  });
+  
+  // Tomar screenshot para análisis visual
+  cy.screenshot(`debug-conversations-${context.toLowerCase().replace(/\s+/g, '-')}`);
+  
+  cy.wait(1000);
+});
+
+// ------------------------------------------- COMMANDS -------------------------------------------
 // PRODUCT SEARCH SERVICE
 
 // Comando para verificar que existen productos
