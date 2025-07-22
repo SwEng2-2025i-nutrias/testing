@@ -23,18 +23,29 @@ def generate_valid_jwt_token(user_id: str, name: str = None, email: str = None, 
     """Generar token JWT válido para el mock_auth_service"""
     payload = {
         'user_id': user_id,
-        'name': name or f'Usuario {user_id}',
+        'name': name or f'Usuario De Prueba {user_id.replace("user", "").replace("admin", "Administrador")}',
         'email': email or f'{user_id}@test.com',
         'role': role
     }
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm='HS256')
 
-# Tokens JWT válidos generados por el servicio OnlineChatService (sincronizados)
-MOCK_TOKENS = {
-    'user1': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlcjEiLCJuYW1lIjoiVXN1YXJpbyBEZSBQcnVlYmEgMSIsImVtYWlsIjoidXNlcjFAdGVzdC5jb20iLCJyb2xlIjoidXNlciJ9.WLt_i2zX09xJtthqwNEFCo6SpURipmB02fprHQRA9GU',
-    'user2': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlcjIiLCJuYW1lIjoiVXN1YXJpbyBEZSBQcnVlYmEgMiIsImVtYWlsIjoidXNlcjJAdGVzdC5jb20iLCJyb2xlIjoidXNlciJ9.v8eAnZowRuC6PaiBcWcUEK3dcQIc5St1D_9T5FU1cSQ',
-    'admin': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW4iLCJuYW1lIjoiQWRtaW5pc3RyYWRvciIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJyb2xlIjoiYWRtaW4ifQ.bs5f7tBcK_-UD5Z3iZdodV2vpOXCGmHxIT4AjG8v5jw',
-}
+# Generar tokens JWT dinámicamente para estar siempre sincronizados
+def _generate_tokens():
+    """
+    Generar tokens dinámicamente usando la misma lógica que el mock_auth_service
+    
+    IMPORTANTE: Esta función genera tokens usando la misma clave secreta (JWT_SECRET_KEY)
+    y estructura de payload que usa el mock_auth_service del OnlineChatService.
+    Esto garantiza que los tokens generados para testing sean válidos.
+    """
+    return {
+        'user1': generate_valid_jwt_token('user1', 'Usuario De Prueba 1', 'user1@test.com', 'user'),
+        'user2': generate_valid_jwt_token('user2', 'Usuario De Prueba 2', 'user2@test.com', 'user'),
+        'admin': generate_valid_jwt_token('admin', 'Administrador', 'admin@test.com', 'admin'),
+    }
+
+# Tokens JWT válidos generados dinámicamente (sincronizados con mock_auth_service)
+MOCK_TOKENS = _generate_tokens()
 
 # Remover fixture event_loop personalizada para evitar conflictos
 
