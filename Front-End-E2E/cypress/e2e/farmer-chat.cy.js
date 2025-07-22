@@ -26,7 +26,7 @@ describe('Farmer Chat Response Flow', () => {
     cy.debugConversationState('despues-click-mensajes');
     
     // Esperar a que se carguen las conversaciones
-    cy.wait(5000); // Aumentado el tiempo de espera
+    cy.wait(5000);
     cy.log('⏳ Esperando a que se carguen las conversaciones completamente...');
     
     // Debug del estado después de la carga
