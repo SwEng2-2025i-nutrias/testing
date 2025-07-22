@@ -62,7 +62,7 @@ async function runParallelChatTests() {
       shell: isWindows
     });
 
-    // Configurar el agricultor (inicia después de 3 segundos para mejor sincronización)
+    // Configurar el agricultor (inicia después de 5 segundos para mejor sincronización)
     let farmerTest;
     setTimeout(() => {
       console.log('🚜 Iniciando prueba del agricultor...');

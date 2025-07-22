@@ -166,7 +166,7 @@ npm run test:complete
 - Ensure all services are running on the specified ports before testing.
 - Each service should use a dedicated test database or test environment.
 - Use fixtures and internal test-only endpoints to reset data safely.
-- For E2E tests, run the buyer tests first, followed by the farmer tests with a 1-2 second delay.
+- For E2E tests, run the buyer tests first, followed by the farmer tests with a 5 second delay.
 
 ---
 

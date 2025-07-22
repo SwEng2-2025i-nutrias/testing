@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+# Product Management Testing Suite - Requirements
+# AgroConecta - Universidad Nacional de Colombia
+# Ingeniería de Software 2 - Semestre 2025-1
+
+# Core HTTP and API testing
+requests
+urllib3
+
+# PDF Report Generation
+reportlab
+pillow
+
+# Testing Framework (optional for advanced testing)
+pytest
+pytest-html
+pytest-json-report
+
+# Logging and Output
+colorlog
+tabulate
+
+# Configuration and Environment
+python-dotenv
+
+# Data Generation and Faker
+faker
+
+# HTTP Session Management
+requests-oauthlib
+
+# Progress Bars and CLI Tools
+tqdm
+click
+
+# Validation and Schema
+jsonschema
+
+# Time and Date Utilities
+python-dateutil
