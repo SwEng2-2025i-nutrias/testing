@@ -75,9 +75,9 @@ This will:
 1. **Frontend running**: Ensure the frontend is active at `http://localhost:5173`.
 2. **Backend running**: Backend services must be active.
 3. **Test data**: The following users must exist in the database:
-   - Buyer: `buyer@gmail.com` / `12345678`
-   - Farmer: `farmer1@gmail.com` / `12345678`
-4. **Test product**: A product named "**Test 0**" must exist.
+   - Buyer: `comprador@gmail.com` / `12345678`
+   - Farmer: `agricultor1@gmail.com` / `12345678`
+4. **Test product**: A product named "**Prueba 0**" must exist and price shoud be less than 20.000 $.
 
 #### Additional Prerequisites for Product Search Tests
 
